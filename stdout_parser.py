@@ -153,11 +153,11 @@ if __name__ == "__main__":
 
     # pickle the result object
     if options.outfile:
-      import pickle
+      import json as pkl
       data = {}
       for k in dir(m):
         v_k = getattr(m, k)
-        if type(v_k) is dict and k!="grammar" and not k.startswith('_'): 
+        if isinstance(v_k, (dict, basestring, list, tuple))  and k!="grammar" and not k.startswith('_'): 
           data[k] = v_k
-      with open(options.outfile,'w') as of:
-        pickle.dump(data, of)
+      with open(options.outfile,'wb') as of:
+        pkl.dump( data, of )

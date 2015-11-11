@@ -1,5 +1,4 @@
 #Copyright (c) 2015 Mingxuan Lin
-import pickle, re
 import matplotlib.pyplot as plt
 from pylab import *
 import numpy as np
@@ -12,11 +11,12 @@ def vMstress(S):
   return np.sqrt(1.5 * np.sum(S**2))
   
 def unpack_vec(y):
+  f = lambda x: x if x else 0
   for k in range(4):
     try:
       if k==0:
-        y1 = y
-      if k==1 and hasattr(y[0],'__iter__') and len(y[0])==9 and isinstance(y[0][0], (int, long, float)):
+        y1 = map(f,y)
+      if k==1 and len(y[0])==9:
         y1 = map(vMstress, y);
       elif k==2:
         y1 = [i[0] for i in y]
@@ -28,6 +28,8 @@ def unpack_vec(y):
       if k>=3: raise
 
 if __name__ == "__main__":
+    import re
+    import json as pkl
     # positional parameters
     parser = OptionParser( usage='%prog [options] datafile', description = "parse DAMASK spectral terminal output", version = "beta1.0")
     parser.add_option('-o', '--out', dest='outfile',  metavar = 'FILE', help='name of output file')
@@ -37,13 +39,16 @@ if __name__ == "__main__":
     parser.add_option('-l',  dest='is_list',  action = 'store_true',   help='list')
     (options, args) = parser.parse_args()
     
-    with open(args[0],"r") as f:
-      a=pickle.load(f)
+    with open(args[0],"rb") as f:
+      a=pkl.load(f)
       
     if options.is_list:
       for k in a:
         print '[{0}]'.format(k)
-        print '\t' + '\n\t'.join( a[k].keys() )
+        try:
+          print '\t' + '\n\t'.join( a[k].keys() )
+        except AttributeError:
+          pass
       exit()
 
     y = unpack_vec(a[options.field][options.y]);
