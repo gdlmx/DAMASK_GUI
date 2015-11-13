@@ -544,9 +544,8 @@ class FormDialog(QDialog):
         if self.apply_callback is not None:
             apply_btn = bbox.addButton(QDialogButtonBox.Apply)
             self.connect(apply_btn, SIGNAL("clicked()"), self.apply)
-            import pdb; pdb.set_trace()
-        self.connect(bbox, SIGNAL("accepted()"), SLOT("accept()"))
-        self.connect(bbox, SIGNAL("rejected()"), SLOT("reject()"))
+        #self.connect(bbox, SIGNAL("accepted()"), SLOT("accept()"))
+        #self.connect(bbox, SIGNAL("rejected()"), SLOT("reject()"))
         layout.addWidget(bbox)
 
         self.setLayout(layout)

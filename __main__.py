@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+progname="DAMASK GUI"
 __copyright__ = "Copyright (C) 2015 Mingxuan Lin \n"
 
 __license__   = """
@@ -29,22 +30,8 @@ OTHER DEALINGS IN THE SOFTWARE.
 
 import sys, os
 from . import QtGui, ApplicationWindow
-from .Filter import FilterBase
-class fooFltr(FilterBase):
-    opt_time = 2
-    def update(self, src):
-        self.result = {'x':[1,2], 'y':[3,4], 'xlabel':'x', 'ylabel':'y'}
-        self.mod_time = self.opt_time
-    
-    
-    @property
-    def ui_options(self):
-        return [('str', 'this is a dumy filter')]
+from .Filter import *
 
-    @ui_options.setter
-    def ui_options(self, value):
-        self.result['ylabel'] = str( value )
-        self.opt_time += 1
 
 if __name__ == "__main__":
     print 'parsing cmd args'
@@ -52,7 +39,7 @@ if __name__ == "__main__":
 
     print 'creating ApplicationWindow ...'
     aw = ApplicationWindow( [fooFltr()] )
-    aw.setWindowTitle(str( os.path.basename(sys.argv[0]) ))
+    aw.setWindowTitle(progname)
     
     print 'show window'
     aw.show()

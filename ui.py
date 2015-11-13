@@ -9,7 +9,8 @@ from PyQt4 import QtGui, QtCore
 from numpy import arange, sin, pi
 from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
-
+import matplotlib.pyplot as plt
+import  matplotlib.tight_layout 
 
 __copyright__ = "Copyright (C) 2015 Mingxuan Lin \n"
 
@@ -50,11 +51,12 @@ class MyMplCanvas(FigureCanvas):
        Author: Florent Rougon, Darren Dale
     """
 
-    def __init__(self, parent=None, width=5, height=4, dpi=100):
+    def __init__(self, parent=None, width=5, height=4, dpi=200):
         fig = Figure(figsize=(width, height), dpi=dpi)
         self.axes = fig.add_subplot(111)
         # We want the axes cleared every time plot() is called
         self.axes.hold(False)
+        self.fig = fig
 
         self.compute_initial_figure()
 
@@ -73,18 +75,19 @@ class Plot2D(FilterBase):
     def update(self, src):
         # plot data from input
         data = self.input[0].result
-        self.axes.plot(  data['x'], data['y'] )
-        self.axes.xlabel(data['xlabel'])
-        self.axes.ylabel(data['ylabel'])
-        self.draw()
+        g=self.canvas.axes.plot(  data['x'], data['y'] )
+        self.canvas.axes.set_xlabel(data['xlabel'])
+        self.canvas.axes.set_ylabel(data['ylabel'])
+        self.canvas.fig.tight_layout()
+        self.canvas.draw()
     
         
 class Fig2D(MyMplCanvas):
     """A canvas that contains a Plot2D object appended to input"""
     def __init__(self, input=[],  *args, **kwargs):
         MyMplCanvas.__init__(self, *args, **kwargs)
-        self.fig = Plot2D(input)
-        self.fig.axes = self.axes
+        self.plotter = Plot2D(input)
+        self.plotter.canvas = self
 
 
 
@@ -118,14 +121,14 @@ class ApplicationWindow(QtGui.QMainWindow):
 
         #----------------------------------
         L=len(filters)
-        dc = Fig2D( filters[L-1:L],  self.main_widget, width=6, height=4, dpi=100)
+        dc = Fig2D( filters[L-1:L],  self.main_widget, width=6, height=4, dpi=150)
         l.addWidget(dc)
         
         #----------------------------------
         dialog = Dialog4Pipe(  filters, self.main_widget, self.updateWindow   )
         #pdb.set_trace()
-        dialog.formwidget.setWindowFlags(QtCore.Qt.Widget)
-        l.addWidget(dialog.formwidget)
+        dialog.setWindowFlags(QtCore.Qt.Widget)
+        l.addWidget(dialog)
         #mdiarea = QtGui.QMdiArea() 
         #l.addWidget(mdiarea)
         #w = mdiarea.addSubWindow(dialog.formwidget)

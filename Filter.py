@@ -27,3 +27,23 @@ class FilterBase(object):
   @ui_options.setter
   def ui_options(self, value):
     print value
+
+
+class fooFltr(FilterBase):
+    opt_time = 2
+    def __init__(self, *value):
+        self.result = {'x':[1,2], 'y':[3,4], 'xlabel':'x', 'ylabel':'y'}
+        FilterBase.__init__(self, *value)
+        
+    def update(self, src):
+        self.mod_time = self.opt_time
+    
+    @property
+    def ui_options(self):
+        return [('str', 'x value'),('str','y value')]
+
+    @ui_options.setter
+    def ui_options(self, value):
+        self.result['xlabel'] =  value[0]
+        self.result['ylabel'] =  value[1]
+        self.opt_time += 1
