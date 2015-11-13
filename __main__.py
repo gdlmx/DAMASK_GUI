@@ -28,19 +28,23 @@ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 OTHER DEALINGS IN THE SOFTWARE.
 """
 
-import sys, os
-from . import QtGui, ApplicationWindow
+import sys
 from .Filter import *
-
+from . import QtGui, ApplicationWindow
+from . import stdout_parser as sp
+from . import plotdat as pd
 
 if __name__ == "__main__":
-    print 'parsing cmd args'
+    #show_example(progname)
+    
     qApp = QtGui.QApplication(sys.argv)
 
-    print 'creating ApplicationWindow ...'
-    aw = ApplicationWindow( [fooFltr()] )
-    aw.setWindowTitle(progname)
+    # 'creating ApplicationWindow ...'
+    m = sp.SO_Reader()
+    m.set_optparser(sp.parser)
+    aw = ApplicationWindow( [ m , pd.PlotXY(m)] )
+    aw.setWindowTitle("DAMASK_GUI")
     
-    print 'show window'
+    # 'show window'
     aw.show()
-    sys.exit(qApp.exec_())
+    sys.exit(qApp.exec_()) # execute the window/app.

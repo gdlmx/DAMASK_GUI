@@ -1,8 +1,8 @@
 #Copyright (c) 2015 Mingxuan Lin
-import matplotlib.pyplot as plt
-from pylab import *
+
 import numpy as np
 from optparse import OptionParser
+from .Filter import *
 
 def vMstress(S):
   S = np.array(S)
@@ -27,40 +27,53 @@ def unpack_vec(y):
     except TypeError:
       if k>=3: raise
 
-if __name__ == "__main__":
-    import re
-    import json as pkl
-    # positional parameters
-    parser = OptionParser( usage='%prog [options] datafile', description = "parse DAMASK spectral terminal output", version = "beta1.0")
-    parser.add_option('-o', '--out', dest='outfile',  metavar = 'FILE', help='name of output file')
-    parser.add_option('-F',  dest='field',  metavar = 'hist_inc|hist_itr', default="hist_inc",  help='field')
-    parser.add_option('-x',  dest='x',  metavar = 'NAME', default="inc", help='x')
-    parser.add_option('-y',  dest='y',  metavar = 'NAME', default="Piola--Kirchhoff stress / MPa", help='y')
-    parser.add_option('-l',  dest='is_list',  action = 'store_true',   help='list')
-    (options, args) = parser.parse_args()
-    
-    with open(args[0],"rb") as f:
-      a=pkl.load(f)
-      
-    if options.is_list:
-      for k in a:
-        print '[{0}]'.format(k)
-        try:
-          print '\t' + '\n\t'.join( a[k].keys() )
-        except AttributeError:
-          pass
-      exit()
+# positional parameters
+parser = OptionParser( usage='%prog [options] datafile', description = "parse DAMASK spectral terminal output", version = "beta1.0")
+parser.add_option('-o', '--out', dest='outfile',  metavar = 'FILE', help='name of output file')
+parser.add_option('-F',  dest='field',  choices = ['hist_inc','hist_itr'], default="hist_inc",  help='field')
+parser.add_option('-x',  dest='x',  metavar = 'NAME', default="inc", help='x')
+parser.add_option('-y',  dest='y',  metavar = 'NAME', default="Piola--Kirchhoff stress / MPa", help='y')
+parser.add_option('-l',  dest='is_list',  action = 'store_true',   help='list')
 
-    y = unpack_vec(a[options.field][options.y]);
-    x = unpack_vec(a[options.field][options.x]);
+
+class PlotXY(UIFilter):
+    name = 'Plot x,y'
+    opt_time = 1
     
-    plt.plot(x, y )
-    plt.xlabel(options.x)
-    plt.ylabel(options.y)
+    def __init__(self, *value):
+        super(PlotXY, self).__init__( *value )
+        self.result = {'x':[0], 'y':[0], 'xlabel':'x', 'ylabel':'y'}
+        self.set_optparser(parser)
+        
+    def update(self, src=None):
+        options = self.options
+        #with open(args[0],"rb") as f:
+        #  a=pkl.load(f)
+        a = self.input[0].result
+        #if options["is_list"]:
+        #  for k in a:
+        #    print '[{0}]'.format(k)
+        #    try:
+        #      print '\t' + '\n\t'.join( a[k].keys() )
+        #    except AttributeError:
+        #      pass
+        self.result['x']  = unpack_vec(a[options["field"]][options["x"]]);
+        self.result['y']  = unpack_vec(a[options["field"]][options["y"]]);
+        
+        self.result['xlabel']  = options["x"]
+        self.result['ylabel']  = options["y"]
+        
+        #import re
+        #if options["outfile"].strip():
+        #  xname = ''.join(re.findall(r'\w+',options["x"]))
+        #  yname = ''.join(re.findall(r'\w+',options["y"]))
+        #  plt.savefig('['+xname+']-['+yname+']--'+options["outfile"])
+
+        self.mod_time = max( self.opt_time, self.input[0].mod_time)
+
+if __name__ == "__main__":
+    (options, args) = parser.parse_args()
+    m = PlotXY()
+    m.options = vars(options)
+    m.update()
     
-    if options.outfile:
-      xname = ''.join(re.findall(r'\w+',options.x))
-      yname = ''.join(re.findall(r'\w+',options.y))
-      plt.savefig('['+xname+']-['+yname+']--'+options.outfile)
-    else:
-      plt.show()

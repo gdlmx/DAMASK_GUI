@@ -47,11 +47,11 @@ progversion = "1.0"
 
 
 class MyMplCanvas(FigureCanvas):
-    """Ultimately, this is a QWidget (as well as a FigureCanvasAgg, etc.).
+    """Ultimately, this is a QWidget (matplotlib.backends.backend_qt4agg)
        Author: Florent Rougon, Darren Dale
     """
 
-    def __init__(self, parent=None, width=5, height=4, dpi=200):
+    def __init__(self, parent=None, width=5, height=4, dpi=100):
         fig = Figure(figsize=(width, height), dpi=dpi)
         self.axes = fig.add_subplot(111)
         # We want the axes cleared every time plot() is called
@@ -75,11 +75,12 @@ class Plot2D(FilterBase):
     def update(self, src):
         # plot data from input
         data = self.input[0].result
-        g=self.canvas.axes.plot(  data['x'], data['y'] )
-        self.canvas.axes.set_xlabel(data['xlabel'])
-        self.canvas.axes.set_ylabel(data['ylabel'])
-        self.canvas.fig.tight_layout()
-        self.canvas.draw()
+        canvas = self.canvas
+        canvas.axes.plot(  data['x'], data['y'] )
+        canvas.axes.set_xlabel(data['xlabel'])
+        canvas.axes.set_ylabel(data['ylabel'])
+        canvas.fig.tight_layout()
+        canvas.draw()
     
         
 class Fig2D(MyMplCanvas):
@@ -88,6 +89,10 @@ class Fig2D(MyMplCanvas):
         MyMplCanvas.__init__(self, *args, **kwargs)
         self.plotter = Plot2D(input)
         self.plotter.canvas = self
+        
+    def update(self):
+        self.fig.tight_layout()
+        MyMplCanvas.update(self)
 
 
 
@@ -121,7 +126,7 @@ class ApplicationWindow(QtGui.QMainWindow):
 
         #----------------------------------
         L=len(filters)
-        dc = Fig2D( filters[L-1:L],  self.main_widget, width=6, height=4, dpi=150)
+        dc = Fig2D( filters[L-1:L],  self.main_widget, width=6, height=4, dpi=100)
         l.addWidget(dc)
         
         #----------------------------------
@@ -152,11 +157,8 @@ class ApplicationWindow(QtGui.QMainWindow):
     def about(self):
         QtGui.QMessageBox.about(self, "About", __about__ )
 
-import pdb
 class Dialog4Pipe(FormDialog):
-    #"""Form Dialog"""
-    #def __init__(self, data, title="", comment="",
-    #             icon=None, parent=None, apply=None):
+    """Connect pipeline to TabFormDialog"""
     def __init__(self, filters, parent=None, update_callback=None):
         """ travel through the pipeline and create a form connected to each filter """
         
@@ -165,7 +167,8 @@ class Dialog4Pipe(FormDialog):
         Flts = []
         while f:
             try:
-                Tabs.append( (f.ui_options,  type(f).__name__,  f.name ) ) # datalist, tab_name, tab_help_msg
+                Tabs.append( (f.ui_options,  type(f).__name__,  f.name ) ) 
+                # datalist, tab_name, tab_help_msg
                 Flts.append( f )
             except AttributeError:
                 pass
@@ -188,9 +191,14 @@ class Dialog4Pipe(FormDialog):
         if self.update_callback:
             self.update_callback( formdata, self.filter_list )
 
-def __main__():
+
+def show_example(name = "Example UI"):
     qApp = QtGui.QApplication(sys.argv)
-    aw = ApplicationWindow()
-    aw.setWindowTitle("%s" % progname)
+
+    # 'creating ApplicationWindow ...'
+    aw = ApplicationWindow( [fooFltr()] )
+    aw.setWindowTitle(name)
+    
+    # 'show window'
     aw.show()
     sys.exit(qApp.exec_())

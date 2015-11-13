@@ -36,7 +36,7 @@ OTHER DEALINGS IN THE SOFTWARE.
 
 from parsimonious.grammar import Grammar
 from parsimonious.nodes import NodeVisitor
-from .Filter import FilterBase
+from .Filter import *
 import codecs, sys,  re
 import pdb
 
@@ -159,11 +159,11 @@ class DamaskVisitor(NodeVisitor):
     L = map(len, hist.values())
     assert(min(L)==max(L)), 'history data corrupted\n' +  '\n'.join(map(str, zip(hist.keys(), L) )) + '\n'
 
-class SO_Reader(FilterBase):
+class SO_Reader(UIFilter):
   def update(self, oUpstream):
-    options = self.options
+    options=self.options
     # open input file
-    with  codecs.open(options.inputfile,"r",'utf-8') as file_in:
+    with  codecs.open(options['inputfile'],"r",'utf-8') as file_in:
         file_data = file_in.read()
 
     # parse
@@ -180,14 +180,16 @@ class SO_Reader(FilterBase):
     self.result = data
 
     # write files to disk
-    if options.dumpfile:
-      with open(options.dumpfile,'w') as df:
+    if options['dumpfile']:
+      with open(options['dumpfile'],'w') as df:
         df.write(m.unparsed)
 
-    if options.outfile:
+    if options['outfile']:
       import json as pkl
-      with open(options.outfile,'wb') as of:
+      with open(options['outfile'],'wb') as of:
         pkl.dump( data, of )
+        
+    self.mod_time = self.opt_time
 
 # positional parameters
 from optparse import OptionParser
@@ -200,6 +202,6 @@ if __name__ == "__main__":
     (options, args) = parser.parse_args()
     options.inputfile = args[0]
     m = SO_Reader()
-    m.options = options
-    m.update(None)
+    m.options = vars(options)
+    m.opt_time=m.mod_time+1
     m.proc(None)
