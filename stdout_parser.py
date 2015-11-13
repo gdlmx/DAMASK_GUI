@@ -1,9 +1,42 @@
 # -*- coding: utf-8
 # Copyright (c) 2015 Mingxuan Lin
-"""Parser for the terminal output (stdout) of DAMASK spectral program
 """
+damask_gui.stdout_parser
+==========
+
+Parser for the terminal output (stdout) of DAMASK spectral program
+
+
+damask_gui License Agreement (MIT License)
+------------------------------------------
+
+Copyright (c) 2015 Mingxuan Lin
+
+Permission is hereby granted, free of charge, to any person
+obtaining a copy of this software and associated documentation
+files (the "Software"), to deal in the Software without
+restriction, including without limitation the rights to use,
+copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the
+Software is furnished to do so, subject to the following
+conditions:
+
+The above copyright notice and this permission notice shall be
+included in all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
+OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
+HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+OTHER DEALINGS IN THE SOFTWARE.
+"""
+
 from parsimonious.grammar import Grammar
 from parsimonious.nodes import NodeVisitor
+from .Filter import FilterBase
 import codecs, sys,  re
 import pdb
 
@@ -126,19 +159,11 @@ class DamaskVisitor(NodeVisitor):
     L = map(len, hist.values())
     assert(min(L)==max(L)), 'history data corrupted\n' +  '\n'.join(map(str, zip(hist.keys(), L) )) + '\n'
 
-  
-
-
-if __name__ == "__main__":
-    from optparse import OptionParser
-    # positional parameters
-    parser = OptionParser( usage='%prog [options] datafile', description = "parse DAMASK spectral terminal output", version = "beta1.0")
-    parser.add_option('-o', '--out', dest='outfile',  metavar = 'FILE', help='name of output file')
-    parser.add_option('-d', '--dump', dest='dumpfile',  metavar = 'FILE', help='name of dump file')
-    (options, args) = parser.parse_args()
-
+class SO_Reader(FilterBase):
+  def update(self, oUpstream):
+    options = self.options
     # open input file
-    with  codecs.open(args[0],"r",'utf-8') as file_in:
+    with  codecs.open(options.inputfile,"r",'utf-8') as file_in:
         file_data = file_in.read()
 
     # parse
@@ -147,17 +172,34 @@ if __name__ == "__main__":
     m.visit(data)
 
     # save results
+    data = {}
+    for k in dir(m):
+      v_k = getattr(m, k)
+      if isinstance(v_k, (dict, basestring, list, tuple))  and k!="grammar" and not k.startswith('_'): 
+        data[k] = v_k
+    self.result = data
+
+    # write files to disk
     if options.dumpfile:
       with open(options.dumpfile,'w') as df:
         df.write(m.unparsed)
 
-    # pickle the result object
     if options.outfile:
       import json as pkl
-      data = {}
-      for k in dir(m):
-        v_k = getattr(m, k)
-        if isinstance(v_k, (dict, basestring, list, tuple))  and k!="grammar" and not k.startswith('_'): 
-          data[k] = v_k
       with open(options.outfile,'wb') as of:
         pkl.dump( data, of )
+
+# positional parameters
+from optparse import OptionParser
+parser = OptionParser( usage='%prog [options] datafile', description = "parse DAMASK spectral terminal output", version = "beta1.0")
+parser.add_option('-o', '--out', dest='outfile',  metavar = 'FILE', help='name of output file')
+parser.add_option('-d', '--dump', dest='dumpfile',  metavar = 'FILE', help='name of dump file')
+parser.add_option('-i',  dest='inputfile',  metavar = 'FILE', help='name of input file')
+
+if __name__ == "__main__":
+    (options, args) = parser.parse_args()
+    options.inputfile = args[0]
+    m = SO_Reader()
+    m.options = options
+    m.update(None)
+    m.proc(None)

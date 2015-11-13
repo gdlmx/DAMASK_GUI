@@ -1,4 +1,4 @@
-# -*- coding: utf-8
+#!/usr/bin/env python
 __copyright__ = "Copyright (C) 2015 Mingxuan Lin \n"
 
 __license__   = """
@@ -27,4 +27,33 @@ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 OTHER DEALINGS IN THE SOFTWARE.
 """
 
-from .ui import ApplicationWindow, QtGui
+import sys, os
+from . import QtGui, ApplicationWindow
+from .Filter import FilterBase
+class fooFltr(FilterBase):
+    opt_time = 2
+    def update(self, src):
+        self.result = {'x':[1,2], 'y':[3,4], 'xlabel':'x', 'ylabel':'y'}
+        self.mod_time = self.opt_time
+    
+    
+    @property
+    def ui_options(self):
+        return [('str', 'this is a dumy filter')]
+
+    @ui_options.setter
+    def ui_options(self, value):
+        self.result['ylabel'] = str( value )
+        self.opt_time += 1
+
+if __name__ == "__main__":
+    print 'parsing cmd args'
+    qApp = QtGui.QApplication(sys.argv)
+
+    print 'creating ApplicationWindow ...'
+    aw = ApplicationWindow( [fooFltr()] )
+    aw.setWindowTitle(str( os.path.basename(sys.argv[0]) ))
+    
+    print 'show window'
+    aw.show()
+    sys.exit(qApp.exec_())
