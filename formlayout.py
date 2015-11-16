@@ -52,7 +52,7 @@ __license__ = __doc__
 DEBUG_FORMLAYOUT = False
 
 import os
-import sys,pdb
+import sys
 import datetime
 
 STDERR = sys.stderr
@@ -346,12 +346,10 @@ class FormWidget(QWidget):
                 self.formlayout.addRow(QLabel(value))
                 self.widgets.append(None)
                 continue
-            elif label=='font':
-                if tuple_to_qfont(value) is not None:
-                    field = FontLayout(value, self)
-            elif label=='color':
-                if text_to_qcolor(value).isValid():
-                    field = ColorLayout(QColor(value), self)
+            elif tuple_to_qfont(value) is not None:
+                field = FontLayout(value, self)
+            elif text_to_qcolor(value).isValid():
+                field = ColorLayout(QColor(value), self)
             elif is_text_string(value):
                 if '\n' in value:
                     for linesep in (os.linesep, '\n'):
@@ -537,15 +535,14 @@ class FormDialog(QDialog):
         self.formwidget.setup()
         
         # Button box
-        self.bbox = bbox = QDialogButtonBox(QDialogButtonBox.Ok
-                                            |QDialogButtonBox.Cancel)
+        self.bbox = bbox = QDialogButtonBox()
         self.connect(self.formwidget, SIGNAL('update_buttons()'),
                      self.update_buttons)
         if self.apply_callback is not None:
             apply_btn = bbox.addButton(QDialogButtonBox.Apply)
             self.connect(apply_btn, SIGNAL("clicked()"), self.apply)
-        #self.connect(bbox, SIGNAL("accepted()"), SLOT("accept()"))
-        #self.connect(bbox, SIGNAL("rejected()"), SLOT("reject()"))
+#        self.connect(bbox, SIGNAL("accepted()"), SLOT("accept()"))
+#        self.connect(bbox, SIGNAL("rejected()"), SLOT("reject()"))
         layout.addWidget(bbox)
 
         self.setLayout(layout)
