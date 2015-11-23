@@ -1,6 +1,6 @@
 #Copyright (c) 2015 Mingxuan Lin
 
-from .ui import *
+from ..ui import *
 import numpy as np
 from optparse import OptionParser
 import re
@@ -100,7 +100,7 @@ class PlotXY(UIFilter):
         except ValueError:
             pass
         
-        self.update_QComboBox({ "x":[xId]+data_keys, 'y': [yId]+data_keys }) #"field":[fId]+field_keys,
+        self.update_form({ "x":[xId]+data_keys, 'y': [yId]+data_keys }) #"field":[fId]+field_keys,
         
         # set result
         oFileName=[]

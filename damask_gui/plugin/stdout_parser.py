@@ -37,7 +37,7 @@ OTHER DEALINGS IN THE SOFTWARE.
 from parsimonious.grammar import Grammar
 from parsimonious.nodes import NodeVisitor
 #from .Filter import *
-from .ui import *
+from ..ui import *
 import codecs, sys,  re
 import pdb
 from optparse import OptionParser

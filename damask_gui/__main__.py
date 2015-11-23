@@ -29,10 +29,9 @@ OTHER DEALINGS IN THE SOFTWARE.
 """
 
 import sys
-from .Filter import *
 from . import QtGui, ApplicationWindow
-from . import stdout_parser as sp
-from . import plotdat as pd
+from  .plugin import stdout_parser as sp
+from  .plugin import plotdat as pd
 
 if __name__ == "__main__":
     #show_example(progname)

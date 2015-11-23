@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 from __future__ import unicode_literals
 
 from .formlayout import *
@@ -217,7 +216,9 @@ class Dialog4Pipe(FormDialog):
         if self.update_callback:
             self.update_callback( formdata, self.filter_list )
 
-
+class QWidgetModifier(object):
+    def __call__(self, w):
+        pass
 
 class UIFilter(FilterBase):
     name = 'UIFilter'
@@ -237,21 +238,32 @@ class UIFilter(FilterBase):
             v = valueList[i]
             if typestr=='list' and isinstance(v,int):
                 v = d_val[v+1]
+            elif typestr=='str_ml':
+                v =[ k for k in v.split('\n') if k]
+            self.options[key] =  v
             if self.options.has_key(key) and self.options[key] != v :
                 time_inc = 1
-            self.options[key] =  v
             i+=1
         self.opt_time += time_inc
 
-    def update_QComboBox(self, valueDict):
+    def update_form(self, valueDict):
         for i, w in enumerate(self.widgetList):
             key, typestr, d_val = self.options_def[i]
-            if typestr == 'list' and isinstance(w, QComboBox) and key in valueDict:
+            try:
                 value = valueDict[key]
+                if isinstance(value, QWidgetModifier):
+                    value(w)
+                    value = value.value
+            except (KeyError,AttributeError):
+                continue
+            if typestr == 'list' and isinstance(w, QComboBox):
                 self.options_def[i] = (key, typestr, value)
                 w.clear()
                 w.addItems(value[1:])
                 w.setCurrentIndex(value[0])
+            elif isinstance(w, (QLineEdit,QTextEdit)):
+                w.setText(value if isinstance(value, (str, unicode)) else repr(value))
+                
 
     def set_options_def(self):
         self.options_def =[ (k, type(v).__name__, v) for k,v in self.options.items() ]
@@ -278,7 +290,7 @@ class UIFilter(FilterBase):
                 self.options[key] = default = bool(default)
             elif oType == 'str_ml':
                 oType = 'str'
-                default = "\n{0}\n".format(default)
+                default = "{0}\n".format(default)
             elif oType == 'list':
                 Id = opt.choices.index(default)  if  default else 0
                 default = [ Id ] + opt.choices

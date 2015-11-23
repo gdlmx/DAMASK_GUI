@@ -12,7 +12,7 @@ class FilterBase(object):
       if not self in i.output:
         i.output.append(self)
 
-  def proc(self, source):
+  def proc(self, source=None):
     if any( self.mod_time < i.mod_time for i in self.input ) or self.mod_time < self.opt_time:
       self.update(source)
     for o_obj in self.output:
