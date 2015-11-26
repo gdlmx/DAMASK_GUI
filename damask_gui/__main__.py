@@ -35,15 +35,14 @@ from  .plugin import plotdat as pd
 
 if __name__ == "__main__":
     #show_example(progname)
-    
+
     qApp = QtGui.QApplication(sys.argv)
 
     # 'creating ApplicationWindow ...'
     m = sp.SO_Reader()
-    m.set_optparser(sp.parser)
     aw = ApplicationWindow( [ m , pd.PlotXY(m)] )
     aw.setWindowTitle("DAMASK_GUI")
-    
+
     # 'show window'
     aw.show()
     sys.exit(qApp.exec_()) # execute the window/app.

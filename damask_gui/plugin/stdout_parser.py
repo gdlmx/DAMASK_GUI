@@ -143,7 +143,7 @@ class DamaskVisitor(NodeVisitor):
   def visit_infoline(self, node, visited_children):
     # report certain operations
     # e.g. "... evaluating constitutive response ......................................"
-    name = node.children[3].text.strip()
+    name = 'No. of ' + node.children[3].text.strip()
     self.count(name)
 
   def visit_any(self, node, visited_children):
@@ -180,6 +180,11 @@ def arch_dict(arch, d):
 
 class SO_Reader(UIFilter):
   name = 'Read terminal output of DAMASK_spectral'
+
+  def __init__(self, *value):
+    super(SO_Reader, self).__init__( *value )
+    self.set_optparser(parser)
+
   def update(self, oUpstream):
     options=self.options
 
