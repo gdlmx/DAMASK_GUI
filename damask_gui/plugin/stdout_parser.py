@@ -182,14 +182,20 @@ class SO_Reader(UIFilter):
   name = 'Read terminal output of DAMASK_spectral'
   def update(self, oUpstream):
     options=self.options
+
+    ifName = options['Read_from']
+    
     # open input file
-    with  codecs.open(options['Read_from'],"r",'utf-8') as file_in:
+    self.printmsg('Opening file: {0}'.format(ifName) , 20000)
+    with  codecs.open(ifName,"r",'utf-8') as file_in:
         file_data = file_in.read()
 
     # parse
     m = DamaskVisitor(stdout_parser)
     m.DEBUG = options['verbose']
+    self.printmsg('Parsing file: {0}'.format(ifName) , 60000)
     data = stdout_parser.parse( file_data )
+    self.printmsg('Analyzing Result ...' , 60000)
     m.visit(data)
 
     # save results

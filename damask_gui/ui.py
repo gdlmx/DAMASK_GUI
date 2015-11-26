@@ -1,16 +1,17 @@
 from __future__ import unicode_literals
 
-from .formlayout import *
-from .Filter import *
-import sys, os, random,pdb
 from PyQt4 import QtGui, QtCore, Qt
+from .formlayout import FormDialog 
+from .Filter import FilterBase
 
-from numpy import arange, sin, pi
+
 from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.backends.backend_qt4agg import NavigationToolbar2QT
 from matplotlib.figure import Figure
 from matplotlib import pyplot as ppl
 import matplotlib
+
+import sys, os, random, time, warnings
 
 pkgs_version = {'Qt':QtCore.QT_VERSION_STR, 'PyQt': Qt.PYQT_VERSION_STR, 'Matplotlib':matplotlib.__version__}
 progname = "DAMASK GUI"
@@ -88,7 +89,7 @@ class ApplicationWindow(QtGui.QMainWindow):
         layout.addWidget(self.mpl_toolbar)
 
         #----------------------------------
-        dialog = Dialog4Pipe(  filters, self.main_widget, self.exec_pipeline   )
+        dialog = Dialog4Pipe(  filters, self.main_widget, self.exec_pipeline ,  self.statusBar().showMessage )
         dialog.setWindowFlags(QtCore.Qt.Widget)
         layout.addWidget(dialog)
 
@@ -97,7 +98,7 @@ class ApplicationWindow(QtGui.QMainWindow):
         self.main_widget.setFocus()
         self.setCentralWidget(self.main_widget)
 
-        self.statusBar().showMessage("", 2000)
+        self.statusBar().showMessage("Ready", 30000)
 
     @QtCore.pyqtSlot()
     def exec_pipeline(self, formdata,  filter_list ):
@@ -154,6 +155,7 @@ class Fig2D(FigureCanvas):
         FigureCanvas.update(self)
 
 class MPL_Plotter(FilterBase):
+    name = 'MPL_Plotter'
     def update(self, src):
         # plot data from input
         data = self.input[0].result
@@ -180,7 +182,7 @@ class SubWinThread(QtCore.QThread):
 
 class Dialog4Pipe(FormDialog):
     """Connect pipeline to TabFormDialog"""
-    def __init__(self, filters, parent=None, update_callback=None):
+    def __init__(self, filters, parent=None, update_callback=None, msg_printer=None):
         """ travel through the pipeline and create a form connected to each filter """
 
         f = filters[0] if filters else None
@@ -188,11 +190,11 @@ class Dialog4Pipe(FormDialog):
         Flts = []
         while f:
             try:
-                Tabs.append( (f.ui_options,  type(f).__name__,  f.name ) )
-                # datalist, tab_name, tab_help_msg
+                Tabs.append( (f.ui_options,  type(f).__name__,  f.name ) ) # datalist, tab_name, tab_help_msg
+                if msg_printer: f.printmsg = msg_printer
                 Flts.append( f )
             except AttributeError:
-                pass
+                warnings.warn('The filter {0} is skipped!'.format(repr(f)))
             if f is filters[-1] :
                 break
             else:
@@ -200,11 +202,12 @@ class Dialog4Pipe(FormDialog):
 
         FormDialog.__init__(self,  Tabs ,
                               "Options", "input parameters for each filter in the pipeline",
-                              parent = parent,
-                              apply = self.__apply__  )
+                              parent = parent, apply = self.__apply__
+                           )
 
         self.filter_list = Flts
         self.update_callback = update_callback
+
 
     @QtCore.pyqtSlot()
     def __apply__(self, formdata):
@@ -233,20 +236,19 @@ class UIFilter(FilterBase):
     def ui_options(self, value):
         valueList, self.widgetList = value
         i = 0
-        time_inc = 0
         for key, typestr, d_val in self.options_def:
             v = valueList[i]
             if typestr=='list' and isinstance(v,int):
                 v = d_val[v+1]
             elif typestr=='str_ml':
                 v =[ k for k in v.split('\n') if k]
-            self.options[key] =  v
-            if self.options.has_key(key) and self.options[key] != v :
-                time_inc = 1
-            i+=1
-        self.opt_time += time_inc
+            if v != self.options.setdefault(key, v)  :
+                self.opt_time = time.time()
+        	self.options[key] =  v
+            i += 1
 
     def update_form(self, valueDict):
+        from . import formlayout
         for i, w in enumerate(self.widgetList):
             key, typestr, d_val = self.options_def[i]
             try:
@@ -256,14 +258,16 @@ class UIFilter(FilterBase):
                     value = value.value
             except (KeyError,AttributeError):
                 continue
-            if typestr == 'list' and isinstance(w, QComboBox):
+            if typestr == 'list' and isinstance(w, formlayout.QComboBox):
                 self.options_def[i] = (key, typestr, value)
                 w.clear()
                 w.addItems(value[1:])
                 w.setCurrentIndex(value[0])
-            elif isinstance(w, (QLineEdit,QTextEdit)):
+            elif isinstance(w, (formlayout.QLineEdit, formlayout.QTextEdit)):
                 w.setText(value if isinstance(value, (str, unicode)) else repr(value))
                 
+    def printmsg(self, msg, pauseTime=1000):
+        print(msg)
 
     def set_options_def(self):
         self.options_def =[ (k, type(v).__name__, v) for k,v in self.options.items() ]

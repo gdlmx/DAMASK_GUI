@@ -5,7 +5,7 @@ import numpy as np
 from optparse import OptionParser
 import re
 
-  
+
 def Mises(tensor , mtype='stress'):
     tensor = np.array(tensor).reshape([3,3])
     PreFact = {'stress': 3.0/2.0, 'strain': 2.0/3.0}[mtype]
@@ -34,7 +34,7 @@ def F2Strain(F, theStretch='V', theStrain = 'ln'):
     stretch={}
     stretch['U'] = np.dot(np.linalg.inv(R),F)
     stretch['V'] = np.dot(F,np.linalg.inv(R))
-    
+
     for i in range(9):
       if abs(stretch[theStretch][i%3,i//3]) < 1e-12:                                            # kill nasty noisy data
         stretch[theStretch][i%3,i//3] = 0.0
@@ -49,7 +49,7 @@ def F2Strain(F, theStretch='V', theStrain = 'ln'):
     d = operator(theStretch,theStrain,D)                              # operate on eigenvalues of U or V
     return np.dot(V,np.dot(np.diag(d),V.T)).real                      # build tensor back from eigenvalue/vector basis
 
-  
+
 def unpack_vec(y, k=0):
     try:
         if k==0:
@@ -78,17 +78,18 @@ parser.add_option('-y',  dest='y',  choices = ["Piola--Kirchhoff stress / MPa",'
 class PlotXY(UIFilter):
     name = 'Plot x,y'
     opt_time = 1
-    
+
     def __init__(self, *value):
         super(PlotXY, self).__init__( *value )
         self.result = {'x':[0], 'y':[0], 'xlabel':'x', 'ylabel':'y'}
         self.set_optparser(parser)
-        
+
     def update(self, src=None):
         options = self.options
+
         a = self.input[0].result
         field = a[options["field"]]
-        
+
         # update UI
         #field_keys = a.keys()
         data_keys = field.keys()
@@ -99,9 +100,9 @@ class PlotXY(UIFilter):
             yId = data_keys.index(options["y"])
         except ValueError:
             pass
-        
+
         self.update_form({ "x":[xId]+data_keys, 'y': [yId]+data_keys }) #"field":[fId]+field_keys,
-        
+
         # set result
         oFileName=[]
         for k in ['x','y']:
@@ -117,12 +118,14 @@ class PlotXY(UIFilter):
                 self.result[k]  = unpack_vec(value)
             self.result[k+'label']  = label
             oFileName.append( ''.join(re.findall(r'\w+',label)) )
-        
+
         if options["outfile"].strip():
             import json as pkl
             oFileName.append(options["outfile"])
             with open('--'.join(oFileName)+'.json','wb') as of:
                 pkl.dump( self.result, of )
+
+        self.printmsg('Figure [{0}] updated'.format('--'.join(oFileName)) , 10000)
         self.mod_time = max( self.opt_time, self.input[0].mod_time )
 
 
@@ -139,4 +142,4 @@ if __name__ == "__main__":
     #    except AttributeError:
     #      pass
     #import re
-    
+
