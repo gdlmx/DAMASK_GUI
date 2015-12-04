@@ -1,3 +1,6 @@
+# -*- coding: utf-8 -*-
+__copyright__ = "Copyright (C) 2015 Mingxuan Lin"
+
 class FilterBase(object):
   mod_time=0
   opt_time=0
@@ -17,7 +20,7 @@ class FilterBase(object):
       self.update(source)
     for o_obj in self.output:
       o_obj.proc(self)
-   
+
   def update(self, src):
     pass
-   
+
