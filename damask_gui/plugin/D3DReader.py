@@ -1,6 +1,14 @@
 # -*- coding: utf-8 -*-
 __copyright__ = "Copyright (C) 2015 Mingxuan Lin"
 
+__help__ = """
+Dream3D Reader
+==============
+
+Transform the Dream3D RVE into DAMASK 'geometry' and 'material configuration' files.
+
+"""
+
 from ..ui import UIFilter
 from .GeomFile import GeomFile
 import numpy as np
@@ -8,7 +16,7 @@ from optparse import OptionParser
 import h5py
 
 # positional parameters
-parser = OptionParser( usage='%prog [options] datafile', description = "", version = "")
+parser = OptionParser( usage='%prog [options] datafile', description = __help__, version = "")
 parser.add_option('-i', '--in', dest='read_from',  metavar = 'FILE', help='dream3d file')
 parser.add_option('-o', '--out', dest='geomFileName',  metavar = 'FILE', help='geometry file')
 parser.add_option('--homogenization', dest='homogenization', type='int',  default=1, help='homogenization index to be used [%default]')
