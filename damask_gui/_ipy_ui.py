@@ -150,3 +150,12 @@ class ApplicationWindow(object):
 
         self.plt=MPL_Plotter(self.filters[-1])
         ppl.show()
+
+    def _patch_ipywidget_style_(self):
+        from IPython.display import display, HTML
+        css = """<style>
+        .widget-label{  background-color:#F0F0F0;  max-width:30% !important;}
+        .widget-label,.widget-text,.widget-checkbox{ width : 100%}
+        </style>"""
+        display(HTML(css))
+
