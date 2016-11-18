@@ -1,3 +1,3 @@
 # -*- coding: utf-8
 
-from .ui import ApplicationWindow, QtGui, progname, __license__
+from .ui import ApplicationWindow,  __license__

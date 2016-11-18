@@ -2,7 +2,7 @@
 __copyright__ = "Copyright (C) 2015 Mingxuan Lin"
 
 import sys
-from . import QtGui, ApplicationWindow, progname
+from  .ui import QtGui, ApplicationWindow, progname
 from  .plugin import stdout_parser as sp
 from  .plugin import plotdat as pd
 

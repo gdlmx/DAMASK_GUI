@@ -1,0 +1,9 @@
+*.asv
+*.swp
+*~
+*.pyc
+*.pyo
+*.7z
+*.zip
+*.egg-info
+*-*-py?.?.egg
