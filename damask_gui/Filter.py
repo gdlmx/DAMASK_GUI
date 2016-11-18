@@ -24,3 +24,12 @@ class FilterBase(object):
   def update(self, src):
     pass
 
+
+def PipeLine(plugins):
+    prev=[]
+    PL=[]
+    for PlgIn in plugins:
+      this = PlgIn(prev)
+      PL.append(this)
+      prev = this
+    return PL
