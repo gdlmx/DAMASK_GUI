@@ -38,6 +38,9 @@ class UIFilter(FilterBase):
     def set_options_def(self): # obsoleted
         pass
 
+    def to_recalc(self, *args, **vargs):
+        self.opt_time = self.mod_time + 1
+
     def set_optparser(self, p):
         """ read optparse.OptionParser object """
         self.options_def = []
@@ -46,7 +49,10 @@ class UIFilter(FilterBase):
         for opt in p.option_list:
             if not opt.dest: continue
             key = opt.dest
-            self.widgets[key] = create_widget(opt)
+            wdg = create_widget(opt)
+            if hasattr(wdg, 'observe'):
+                 wdg.observe(self.to_recalc)
+            self.widgets[key] = wdg
             self.opts[key]=opt
 
     @property
@@ -107,13 +113,20 @@ class MPL_Plotter(FilterBase):
 
     def update(self, src):
         # plot data from input
+        from matplotlib import pyplot as ppl
         data = self.input[0].result
         self.axes.plot(  data['x'], data['y'] )
         self.axes.set_xlabel(data['xlabel'])
         self.axes.set_ylabel(data['ylabel'])
         self.fig.tight_layout()
-        from matplotlib import pyplot as ppl
-        ppl.show()
+        self.fig.canvas.draw()
+
+    def clear(self):
+        gca = self.fig.gca()
+        if not self.axes is gca:
+            self.fig.delaxes(self.axes)
+            self.axes = gca
+        self.axes.clear()
 
 class ApplicationWindow(object):
     def __init__(self, filters=[]):
@@ -122,24 +135,35 @@ class ApplicationWindow(object):
             assert (isinstance(f, FilterBase)), 'unexpected type of filter'
 
     def _runtimeline(self):
-        self.filters[0].opt_time=1
-        self.filters[1].opt_time=self.filters[1].mod_time+1
+        #self.filters[0].opt_time=1
+        #self.filters[1].opt_time=self.filters[1].mod_time+1
         self.filters[0].proc(None)
 
-    def show(self):
+    def get_or_create(self, propname, f):
+        if not hasattr(self, propname):
+            setattr(self, propname, f(self))
+        return getattr(self,propname)
+
+    def redrawfig(self, *args):
         import matplotlib.pyplot as ppl
+        for f in self.filters:
+            if isinstance(f,MPL_Plotter):
+                f.to_recalc()
+                if not self.wdg_isholdon.value:
+                    f.clear()
 
-        def refresh(x):
-            self._runtimeline()
+        self._runtimeline()
+        # recompute the ax.dataLim
+        self.plt.axes.relim()
+        # update ax.viewLim using the new dataLim
+        # self.plt.axes.autoscale_view()
+        #ppl.draw()
 
-        self.btn=widgets.Button(  description='Update' )
-
-        self.btn.on_click(refresh)
-
+    def show(self):
         F_list=[]
         for n,f in enumerate(self.filters) :
             tab_list=[]
-            for name, w in getattr(f,'widgets',[]).items():
+            for name, w in sorted(getattr(f,'widgets',[]).items()):
                 tab_list.append(w)
             F_list.append(widgets.VBox(tab_list))
         tab = widgets.Accordion(children= F_list )
@@ -147,10 +171,27 @@ class ApplicationWindow(object):
             tab.set_title(n, '[+] '+f.name)
         display(tab)
 
-        display(self.btn)
+        btn = self.get_or_create( 'btn', 
+            lambda x: widgets.Button(  description='Refresh & Draw' ) 
+            )
+        btn.on_click(self.redrawfig)
+        display(btn)
 
-        self.plt=MPL_Plotter(self.filters[-1])
-        ppl.show()
+        btn_dupfig = self.get_or_create( 'btn_dupfig', 
+            lambda x: widgets.Button(  description='+' ) 
+            )
+        btn_dupfig.on_click(lambda x: display(plt.fig))
+        display(btn_dupfig)
+
+        wdg_isholdon = self.get_or_create('wdg_isholdon', 
+            lambda x: widgets.Checkbox(description='Hold on', value=False)
+            )
+        display(wdg_isholdon)
+
+        plt = self.get_or_create('plt',
+            lambda x: MPL_Plotter(self.filters[-1])
+            )
+        #display(plt.fig)
 
     def _patch_ipywidget_style_(self):
         from IPython.display import display, HTML
