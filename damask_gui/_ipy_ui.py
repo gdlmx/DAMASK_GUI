@@ -3,6 +3,8 @@ from __future__ import unicode_literals
 from .Filter import FilterBase
 import sys, os, random, time, warnings
 from ipywidgets import widgets
+from IPython.display import display
+
 Opt2Widget={
         None: (widgets.Checkbox,bool),
         'string':(widgets.Text,str),
@@ -125,7 +127,6 @@ class ApplicationWindow(object):
         self.filters[0].proc(None)
 
     def show(self):
-        from IPython.display import display
         import matplotlib.pyplot as ppl
 
         def refresh(x):
