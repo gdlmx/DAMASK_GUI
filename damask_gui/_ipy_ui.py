@@ -52,6 +52,8 @@ class UIFilter(FilterBase):
             wdg = create_widget(opt)
             if hasattr(wdg, 'observe'):
                  wdg.observe(self.to_recalc)
+            if hasattr(wdg, 'on_submit'):
+                 wdg.on_submit(self.to_recalc)
             self.widgets[key] = wdg
             self.opts[key]=opt
 
@@ -106,10 +108,15 @@ class MPL_Plotter(FilterBase):
 
     def __init__(self, *value):
         super(MPL_Plotter, self).__init__( *value )
+        self._init_fig()
+
+    def _init_fig(self):
         from matplotlib import pyplot as ppl
-        self.fig    = ppl.figure()
+        print('Creating new figure')
+        self.fig    = ppl.gcf()
         self.axes   = self.fig.add_subplot(111)
         self.canvas = self.fig.canvas
+        ppl.show()
 
     def update(self, src):
         # plot data from input
@@ -119,14 +126,20 @@ class MPL_Plotter(FilterBase):
         self.axes.set_xlabel(data['xlabel'])
         self.axes.set_ylabel(data['ylabel'])
         self.fig.tight_layout()
+        self.axes.relim()
         self.fig.canvas.draw()
+        # update ax.viewLim using the new dataLim
+        # self.plt.axes.autoscale_view()
 
     def clear(self):
-        gca = self.fig.gca()
-        if not self.axes is gca:
-            self.fig.delaxes(self.axes)
-            self.axes = gca
+        from matplotlib import pyplot as ppl
         self.axes.clear()
+        self.axes.cla()
+        gca = ppl.gca()
+        if not self.axes is gca:
+            self._init_fig()
+        self.axes.clear()
+        self.axes.cla()
 
 class ApplicationWindow(object):
     def __init__(self, filters=[]):
@@ -147,23 +160,22 @@ class ApplicationWindow(object):
     def redrawfig(self, *args):
         import matplotlib.pyplot as ppl
         for f in self.filters:
-            if isinstance(f,MPL_Plotter):
+            if f.name.startswith('Plot'):
                 f.to_recalc()
-                if not self.wdg_isholdon.value:
-                    f.clear()
 
+        if not self.wdg_isholdon.value:
+            self.plt.clear()
         self._runtimeline()
-        # recompute the ax.dataLim
-        self.plt.axes.relim()
-        # update ax.viewLim using the new dataLim
-        # self.plt.axes.autoscale_view()
         #ppl.draw()
+
+    def new_view(self, *args):
+        display(self.plt.fig)
 
     def show(self):
         F_list=[]
         for n,f in enumerate(self.filters) :
             tab_list=[]
-            for name, w in sorted(getattr(f,'widgets',[]).items()):
+            for name, w in sorted(getattr(f,'widgets',{}).items()):
                 tab_list.append(w)
             F_list.append(widgets.VBox(tab_list))
         tab = widgets.Accordion(children= F_list )
@@ -180,7 +192,7 @@ class ApplicationWindow(object):
         btn_dupfig = self.get_or_create( 'btn_dupfig', 
             lambda x: widgets.Button(  description='+' ) 
             )
-        btn_dupfig.on_click(lambda x: display(plt.fig))
+        btn_dupfig.on_click(  self.new_view )
         display(btn_dupfig)
 
         wdg_isholdon = self.get_or_create('wdg_isholdon', 
@@ -188,9 +200,11 @@ class ApplicationWindow(object):
             )
         display(wdg_isholdon)
 
-        plt = self.get_or_create('plt',
+        
+        plt = self.get_or_create('plt', 
             lambda x: MPL_Plotter(self.filters[-1])
             )
+
         #display(plt.fig)
 
     def _patch_ipywidget_style_(self):
@@ -198,6 +212,13 @@ class ApplicationWindow(object):
         css = """<style>
         .widget-label{  background-color:#F0F0F0;  max-width:30% !important;}
         .widget-label,.widget-text,.widget-checkbox{ width : 100%}
+        div.output_subarea.output_text.output_error {max-height: 10em;}
+        //::before{  content: "<a class=plus href=#>[+]</a><a href=#>[-]</a>"; }
+        div.output_subarea.output_text.output_error:hover{ max-height: 100%;}
+        div.output_subarea .ansired{display:inline}
+        //a.plus-expand:focus{display: none}
+        //a.plus-expand:not(:focus)~a{visibility: hidden}
+        //a:focus~div.output_subarea{  max-height: 100%; }
         </style>"""
         display(HTML(css))
 
