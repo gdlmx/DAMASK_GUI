@@ -36,7 +36,46 @@ def is_in_jupyter():
     import sys
     return all( m  in sys.modules for m in ['IPython.core', 'jupyter_client.jupyter_core'] )
 
-if is_in_jupyter():
-    from ._ipy_ui import *
-else:
-    from ._qt4_ui import *
+try:
+    if is_in_jupyter():
+        from ._ipy_ui import * # UIFilter, ApplicationWindow
+    else:
+        from ._qt4_ui import * # UIFilter, ApplicationWindow
+except ImportError:
+    from .Filter import FilterBase
+    class ApplicationWindow(object):
+        def __init__(self, filters=[]):
+            print( 'Main window fails to start because Qt4 cannot be found.' )
+
+    class UIFilter(FilterBase):
+        name = 'Dummy UI Filter'
+        DEBUG=None
+        options_def =  ((None,'str', 'NULL'),)  #[(Key, Type, defaultVal)]
+        options = None
+
+        @property   # obsoleted
+        def ui_options(self):
+            return [ ( key,  d_val) for key, typestr, d_val in self.options_def]
+
+        @ui_options.setter # obsoleted
+        def ui_options(self, value):
+            pass
+
+        def update_form(self, valueDict): # obsoleted
+            pass
+                    
+        def printmsg(self, msg, pauseTime=1000):
+            print(msg)
+
+        def set_options_def(self): # obsoleted
+            pass
+
+        def set_optparser(self, p):
+            pass
+
+        def __getitem__(self, k):
+            return None
+
+        def __setitem__(self, k, v):
+            pass
+
