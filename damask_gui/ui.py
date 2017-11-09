@@ -34,7 +34,7 @@ OTHER DEALINGS IN THE SOFTWARE.
 
 def is_in_jupyter():
     import sys
-    return all( m  in sys.modules for m in ['IPython.core', 'jupyter_client.jupyter_core'] )
+    return any( m  in sys.modules for m in ['IPython.core', 'jupyter_client.jupyter_core'] )
 
 try:
     if is_in_jupyter():
@@ -63,7 +63,7 @@ except ImportError:
 
         def update_form(self, valueDict): # obsoleted
             pass
-                    
+
         def printmsg(self, msg, pauseTime=1000):
             print(msg)
 

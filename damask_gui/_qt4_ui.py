@@ -1,7 +1,7 @@
 from __future__ import unicode_literals
 
 from PyQt4 import QtGui, QtCore, Qt
-from .formlayout import FormDialog 
+from .formlayout import FormDialog
 from .Filter import FilterBase
 
 
@@ -210,7 +210,7 @@ class UIFilter(FilterBase):
                 v =[ k for k in v.split('\n') if k]
             if v != self.options.setdefault(key, v)  :
                 self.opt_time = time.time()
-        	self.options[key] =  v
+                self.options[key] =  v
             i += 1
 
     def update_form(self, valueDict):
@@ -231,7 +231,7 @@ class UIFilter(FilterBase):
                 w.setCurrentIndex(value[0])
             elif isinstance(w, (formlayout.QLineEdit, formlayout.QTextEdit)):
                 w.setText(value if isinstance(value, (str, unicode)) else repr(value))
-                
+
     def printmsg(self, msg, pauseTime=1000):
         print(msg)
 

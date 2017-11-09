@@ -31,7 +31,7 @@ class UIFilter(FilterBase):
     def update_form(self, valueDict): # obsoleted
         for key, val in valueDict.items():
             self[key] = val
-                
+
     def printmsg(self, msg, pauseTime=1000):
         print(msg)
 
@@ -60,7 +60,7 @@ class UIFilter(FilterBase):
     @property
     def options(self):
         return {k: self[k]  for k in self.widgets }
-    
+
     @options.setter
     def options(self, v):
         pass
@@ -183,25 +183,25 @@ class ApplicationWindow(object):
             tab.set_title(n, '[+] '+f.name)
         display(tab)
 
-        btn = self.get_or_create( 'btn', 
-            lambda x: widgets.Button(  description='Refresh & Draw' ) 
+        btn = self.get_or_create( 'btn',
+            lambda x: widgets.Button(  description='Refresh & Draw' )
             )
         btn.on_click(self.redrawfig)
         display(btn)
 
-        btn_dupfig = self.get_or_create( 'btn_dupfig', 
-            lambda x: widgets.Button(  description='+' ) 
+        btn_dupfig = self.get_or_create( 'btn_dupfig',
+            lambda x: widgets.Button(  description='+' )
             )
         btn_dupfig.on_click(  self.new_view )
         display(btn_dupfig)
 
-        wdg_isholdon = self.get_or_create('wdg_isholdon', 
+        wdg_isholdon = self.get_or_create('wdg_isholdon',
             lambda x: widgets.Checkbox(description='Hold on', value=False)
             )
         display(wdg_isholdon)
 
-        
-        plt = self.get_or_create('plt', 
+
+        plt = self.get_or_create('plt',
             lambda x: MPL_Plotter(self.filters[-1])
             )
 
