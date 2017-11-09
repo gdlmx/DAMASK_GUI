@@ -8,7 +8,7 @@ from setuptools import setup, find_packages
 setup(
     name='damask_gui',
     version='0.1.0',
-    description='GUI for Düsseldorf Advanced Material Simulation Kit',
+    description='GUI for Duesseldorf Advanced Material Simulation Kit',
     #long_description = long_description,
     author='Mingxuan Lin',
     author_email='mingxuan.lin@iehk.rwth-aachen.de',
