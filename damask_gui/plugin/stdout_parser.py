@@ -163,7 +163,7 @@ class SO_Reader(UIFilter):
     options=self.options
 
     ifName = options['Read_from']
-    
+
     # open input file
     self.printmsg('Opening file: {0}'.format(ifName) , 20000)
     with  codecs.open(ifName,"r",'utf-8') as file_in:
@@ -194,7 +194,7 @@ class SO_Reader(UIFilter):
     fOut = options['Store_parsed_data_to']
     if fOut:
       import json as pkl
-      with open(fOut,'wb') as of:
+      with open(fOut,'w', encoding='utf-8') as of:
         pkl.dump( data, of )
 
     self.mod_time = self.opt_time

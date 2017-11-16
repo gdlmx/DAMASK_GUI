@@ -122,8 +122,8 @@ class PlotXY(UIFilter):
         if options["outfile"].strip():
             import json as pkl
             oFileName.append(options["outfile"])
-            with open('--'.join(oFileName)+'.json','wb') as of:
-                pkl.dump( self.result, of )
+            with open('--'.join(oFileName)+'.json','w', encoding="utf-8") as of:
+                pkl.dump( self.result, of ,  sort_keys=True  )
 
         self.printmsg('Figure [{0}] updated'.format('--'.join(oFileName)) , 10000)
         self.mod_time = max( self.opt_time, self.input[0].mod_time )
