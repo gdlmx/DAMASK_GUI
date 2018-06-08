@@ -91,7 +91,7 @@ class DamaskVisitor(NodeVisitor):
     p.update( zip(['inc','max_inc'], self.get_inc(node.children[1])) )
     p.setdefault('inc0_in_loadcase',0)
     if not (p['inc']  == p['inc_in_loadcase'] + p['inc0_in_loadcase'] ):
-        err_msg = 'the increment numbers mismatch\n'+ node.text.encode('ascii','replace')
+        err_msg = 'the increment numbers mismatch\n'+ node.text.decode('ascii','replace')
         print err_msg; raise ValueError(err_msg) # Python doesn't support unicode in error message
     itr_num = [ int(v) for v in re.findall(r'\d+', node.children[5].text)]
     self.prop.update(zip(  ['itr_min', 'itr', 'itr_max']  ,  itr_num))
